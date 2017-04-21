@@ -1,0 +1,207 @@
+#!/bin/bash
+#
+#   Simple shell wrapper for kodis jsonrpc
+#
+#   For usage informations run:
+#     $ kodi-rpc --help
+#
+
+HOST=""
+PORT=""
+USER=""
+PASS=""
+
+config="${HOME}/.config/kodi-rpc.conf"
+
+method=""
+params=""
+
+function usage() {
+    local script=`basename "$0"`
+
+    printf "usage: $script [options] [method] [params [...]]\n"
+    printf "  -H [host]     Host kodi is running on\n"
+    printf "  -P [port]     Port kodi is running on\n"
+    printf "  -u [user]     User for authentication\n"
+    printf "  -p [pass]     Password for authentication\n"
+    printf "  -c [config]   Config file to use instead of supplying\n"
+    printf "                connection infos via cli\n"
+    printf "  -h, --help    Show this help message\n"
+    printf "\n"
+    printf "Notes:\n"
+    printf "  - If connection-infos AND a config are omitted,\n"
+    printf "    \"%s\" will be used if it exists\n" "${config}"
+    printf "\n"
+    printf "  - For playerid you may use \"active\" as value.\n"
+    printf "    $script Player.PlayPause playerid active\n"
+    printf "\n"
+    printf "  - Kodis jsonrpc documentation can be found here:\n"
+    printf "    http://kodi.wiki/view/JSON-RPC_API/v8\n"
+    printf "\n"
+    printf "Examples:\n"
+    printf "  $ $script Application.SetMute mute toggle\n"
+    printf "  $ $script Application.SetVolume volume increment\n"
+    printf "  $ $script Player.PlayPause playerid active\n"
+
+}
+
+function argparse() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            "-h"|"--help")
+                usage
+                exit 0
+                ;;
+            "-H")
+                HOST="$2"
+                shift
+                ;;
+            "-P")
+                PORT=$2
+                shift
+                ;;
+            "-u")
+                USER="$2"
+                shift
+                ;;
+            "-p")
+                PASS="$2"
+                shift
+                ;;
+            "-c")
+                if [ ! -f "$2" ]; then
+                    printf "Config doesn't exist. Exiting!\n"
+                    exit 1
+                fi
+                config="$2"
+                shift
+                ;;
+            **)
+                method="$1"
+                shift
+
+                params=("$@")
+                break
+                ;;
+        esac
+
+        shift
+    done
+
+    ## check for host and port
+    if [ -z "${HOST}" ] || [ -z "${PORT}" ]; then
+        ## no host/port so we try and parse a config
+        if [ -f "${config}" ] && [ ! -z "${config}" ]; then
+            source "${config}"
+        fi
+    fi
+
+    ## check again for host and port and exit if it's still missing
+    if [ -z "${HOST}" ] || [ -z "${PORT}" ]; then
+        printf "No proper connection info found. Exiting!\n"
+        exit 1
+    fi
+
+    ## make sure params are of an even number
+    local _num_params=${#params[@]}
+    if [ ! $((_num_params%2)) -eq 0 ]; then
+        printf "Uneven amount of params. Exiting!\n"
+        exit 1
+    fi
+}
+
+function log() {
+    echo -e "$@" >&2
+}
+
+function json_extract() {
+    ## ToDo: I really don't like this but have no better solution as of yet.
+    ## invocing python might be an idea but I'm not sure about that either.
+    local _key="$1"
+    awk -F"[,:}]" '{for(i=1;i<=NF;i++){if($i~/'${_key}'\042/){print $(i+1)}}}' | tr -d '"'
+}
+
+function get_active_player() {
+    local _body="$(build_body "Player.GetActivePlayers")"
+    local _resp=$(request "${_body}")
+    local _playerid=$(echo "${_resp}" | json_extract "playerid")
+
+    ## fallback to playerid 0 if it's empty or not an int
+    if [ -z ${_playerid} ] || [[ ! ${_playerid} =~ ^[0-9]+$ ]]; then
+        log "Falling back to playerid 0"
+        _playerid=0
+    fi
+    echo "${_playerid}"
+}
+
+function build_body() {
+    local _method=$1
+    shift
+    local _params=("$@")
+
+    ## make sure params are of an even number
+    local _num_params=${#_params[@]}
+    if [ ! $((_num_params%2)) -eq 0 ]; then
+        exit 1
+    fi
+
+    local _params_str=""
+    for (( i=0; i < ${#_params[@]} ; i+=2 )) ; do
+        local key="${_params[i]}"
+        local val="${_params[i+1]}"
+
+        ## separate new key-value pairs with a ","
+        if [ ! -z "${_params_str}" ]; then
+            _params_str+=", "
+        fi
+
+        ## automatically obtain active player if required
+        if [ "${key}" == "playerid" ] && [ "${val}" == "active" ]; then
+            val=$(get_active_player)
+        fi
+
+        ## append new key-value to params string
+        if [[ "${val}" =~ ^[0-9]+$ ]] || \
+                [ ${val} == true ] || \
+                [ ${val} == false ] ; then
+            _params_str+="\"${key}\" : ${val}"
+        else
+            _params_str+="\"${key}\" : \"${val}\""
+        fi
+    done
+
+    if [ ! -z "${_params_str}" ]; then
+        _params_str='"params": { '$_params_str' },'
+    fi
+
+    printf '''
+    {
+        "jsonrpc": "2.0",
+        "method": "%s",
+        %s
+        "id": 1
+    }''' "${_method}" "${_params_str}"
+}
+
+function request() {
+    local body="$1"
+    local cred=""
+    if [ ! -z "${USER}" ] && [ ! -z "${PASS}" ]; then
+        cred="${USER}:${PASS}@"
+    fi
+
+    local url="http://${cred}${HOST}:${PORT}/jsonrpc"
+    local resp=$(curl -s -H "Content-Type: application/json" -d "${body}" "${url}")
+    echo "${resp}"
+}
+
+## parse all supplied arguments
+argparse "$@"
+
+
+## build the body we want to send
+body="$(build_body "${method}" "${params[@]}")"
+
+## send request to kodi
+response=$(request "${body}")
+echo "${response}"
