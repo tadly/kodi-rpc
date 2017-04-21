@@ -2,7 +2,7 @@ kodi-rpc
 ========
 Simple shell wrapper for kodis jsonrpc
 
-## Usage:
+## Usage
 ```
 $ kodi-rpc --help
 usage: kodi-rpc [options] [method] [params [...]]
@@ -28,4 +28,14 @@ Examples:
   $ kodi-rpc Application.SetMute mute toggle
   $ kodi-rpc Application.SetVolume volume increment
   $ kodi-rpc Player.PlayPause playerid active
+```
+
+## Installation
+Download [this](https://raw.githubusercontent.com/Tadly/kodi-rpc/master/kodi-rpc), put it somewhere for you to access and make sure it is executable.  
+...  
+...  
+What??? Oh, you are lazy? Hm... I see.
+```sh
+curl https://raw.githubusercontent.com/Tadly/kodi-rpc/master/kodi-rpc -o kodi-rpc
+chmod u+x kodi-rpc
 ```
