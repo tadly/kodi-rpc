@@ -6,6 +6,8 @@
 #     $ kodi-rpc --help
 #
 
+VERSION="0.0.1"
+
 here="$(dirname "$0")"
 
 config_name="kodi-rpc.conf"
@@ -29,11 +31,12 @@ function usage() {
     printf "  -p [pass]     Password for authentication\n"
     printf "  -c [config]   Config file to use instead of supplying\n"
     printf "                connection infos via cli\n"
-    printf "  -h, --help    Show this help message\n"
+    printf "  -v, --version Print version and exit\n"
+    printf "  -h, --help    Show this help message and exit\n"
     printf "\n"
     printf "Notes:\n"
     printf "  - If connection-infos AND a config are omitted,\n"
-    printf "    \"%s\" or \"%s\" will be used if it exists\n" "${here}/${config_name}.conf" "${config}"
+    printf "    \"%s\" or \"%s\" will be used if it exists\n" "${here}/${config_name}" "${config}"
     printf "\n"
     printf "  - For playerid you may use \"active\" as value.\n"
     printf "    $script Player.PlayPause playerid active\n"
@@ -53,6 +56,10 @@ function argparse() {
         case $1 in
             "-h"|"--help")
                 usage
+                exit 0
+                ;;
+            "-v"|"--version")
+                echo "${VERSION}"
                 exit 0
                 ;;
             "-H")
