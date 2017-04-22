@@ -6,12 +6,15 @@
 #     $ kodi-rpc --help
 #
 
+here="$(dirname "$0")"
+
+config_name="kodi-rpc.conf"
+config="${HOME}/.config/${config_name}"
+
 HOST=""
 PORT=""
 USER=""
 PASS=""
-
-config="${HOME}/.config/kodi-rpc.conf"
 
 method=""
 params=""
@@ -30,7 +33,7 @@ function usage() {
     printf "\n"
     printf "Notes:\n"
     printf "  - If connection-infos AND a config are omitted,\n"
-    printf "    \"%s\" will be used if it exists\n" "${config}"
+    printf "    \"%s\" or \"%s\" will be used if it exists\n" "${here}/${config_name}.conf" "${config}"
     printf "\n"
     printf "  - For playerid you may use \"active\" as value.\n"
     printf "    $script Player.PlayPause playerid active\n"
@@ -91,7 +94,9 @@ function argparse() {
     ## check for host and port
     if [ -z "${HOST}" ] || [ -z "${PORT}" ]; then
         ## no host/port so we try and parse a config
-        if [ -f "${config}" ] && [ ! -z "${config}" ]; then
+        if [ -f "${here}/${config_name}" ]; then
+            source "${here}/${config_name}"
+        elif [ -f "${config}" ] && [ ! -z "${config}" ]; then
             source "${config}"
         fi
     fi
@@ -186,12 +191,14 @@ function build_body() {
 function request() {
     local body="$1"
     local cred=""
+
     if [ ! -z "${USER}" ] && [ ! -z "${PASS}" ]; then
         cred="${USER}:${PASS}@"
     fi
 
     local url="http://${cred}${HOST}:${PORT}/jsonrpc"
     local resp=$(curl -s -H "Content-Type: application/json" -d "${body}" "${url}")
+
     echo "${resp}"
 }
 
