@@ -12,11 +12,12 @@ usage: kodi-rpc [options] [method] [params [...]]
   -p [pass]     Password for authentication
   -c [config]   Config file to use instead of supplying
                 connection infos via cli
-  -h, --help    Show this help message
+  -v, --version Print version and exit
+  -h, --help    Show this help message and exit
 
 Notes:
   - If connection-infos AND a config are omitted,
-    "/home/tadly/.config/kodi-rpc.conf" will be used if it exists
+    "./kodi-rpc.conf" or "~/.config/kodi-rpc.conf" will be used if it exists
 
   - For playerid you may use "active" as value.
     kodi-rpc Player.PlayPause playerid active
