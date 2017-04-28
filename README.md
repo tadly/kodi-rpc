@@ -34,11 +34,12 @@ Examples:
 ```
 
 ## Installation
-Download [this](https://raw.githubusercontent.com/Tadly/kodi-rpc/master/kodi-rpc), put it somewhere for you to access and make sure it is executable.  
-...  
-...  
-What??? Oh, you are lazy? Hm... I see.
+### Manual
 ```sh
-curl https://raw.githubusercontent.com/Tadly/kodi-rpc/master/kodi-rpc -o kodi-rpc
-chmod u+x kodi-rpc
+git clone https://github.com/Tadly/kodi-rpc
+./kodi-rpc/kodi-rpc --install
+rm -rf ./kodi-rpc
+
+# To uninstall it again
+kodi-rpc --uninstall
 ```
