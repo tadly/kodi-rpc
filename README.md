@@ -12,6 +12,8 @@ usage: kodi-rpc [options] [method] [params [...]]
   -p [pass]     Password for authentication
   -c [config]   Config file to use instead of supplying
                 connection infos via cli
+  --install     Install to system (/usr/bin/kodi-rpc)
+  --uninstall   Uninstall from system (/usr/bin/kodi-rpc)
   -v, --version Print version and exit
   -h, --help    Show this help message and exit
 

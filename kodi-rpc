@@ -21,6 +21,8 @@ PASS=""
 method=""
 params=""
 
+install_target='/usr/bin/kodi-rpc'
+
 function usage() {
     local script=`basename "$0"`
 
@@ -31,6 +33,8 @@ function usage() {
     printf "  -p [pass]     Password for authentication\n"
     printf "  -c [config]   Config file to use instead of supplying\n"
     printf "                connection infos via cli\n"
+    printf "  --install     Install to system (%s)\n" "${install_target}"
+    printf "  --uninstall   Uninstall from system (%s)\n" "${install_target}"
     printf "  -v, --version Print version and exit\n"
     printf "  -h, --help    Show this help message and exit\n"
     printf "\n"
@@ -54,6 +58,14 @@ function usage() {
 function argparse() {
     while [ $# -gt 0 ]; do
         case $1 in
+            "--install")
+                install
+                exit 0
+                ;;
+            "--uninstall")
+                uninstall
+                exit 0
+                ;;
             "-h"|"--help")
                 usage
                 exit 0
@@ -124,6 +136,49 @@ function argparse() {
 
 function log() {
     echo -e "$@" >&2
+}
+
+function install() {
+    ## check if target already exists
+    if [ -f "${install_target}" ]; then
+        printf '"%s" already exists.\n' "${install_target}"
+        read -p "Proceed and overwrite [y/N]? " -n 1 -r
+        printf "\n"
+
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            printf "Installation canceled.\n"
+            exit 0
+        fi
+    fi
+
+    sudo cp "$0" "${install_target}"
+    if [ $? -eq 0 ]; then
+        printf "Installation successful!\n"
+    else
+        printf "Installation failed!\n"
+    fi
+}
+
+function uninstall() {
+    if [ ! -f "${install_target}" ]; then
+        printf "Not installed, nothing to do!\n"
+        exit 0
+    fi
+
+    read -p "Remove \"${install_target}\" from your system? [y/N]? " -n 1 -r
+    printf "\n"
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        printf "Uninstallation canceled.\n"
+        exit 0
+    fi
+
+    sudo rm "${install_target}"
+    if [ $? -eq 0 ]; then
+        printf "Uninstallation successful!\n"
+    else
+        printf "Uninstallation failed!\n"
+    fi
 }
 
 function json_extract() {
