@@ -52,6 +52,8 @@ function usage() {
     printf "  $ $script Application.SetMute mute toggle\n"
     printf "  $ $script Application.SetVolume volume increment\n"
     printf "  $ $script Player.PlayPause playerid active\n"
+    printf "  $ $script Player.GetItem playerid active "
+    printf "properties '[\"artist\", \"album\", \"title\"]'\n"
 
 }
 
@@ -229,8 +231,9 @@ function build_body() {
 
         ## append new key-value to params string
         if [[ "${val}" =~ ^[0-9]+$ ]] || \
+                [[ "${val}" == \[*\] ]] || \
                 [ "${val}" == "true" ] || \
-                [ "${val}" == "false" ] ; then
+                [ "${val}" == "false" ]; then
             _params_str+="\"${key}\" : ${val}"
         else
             _params_str+="\"${key}\" : \"${val}\""
