@@ -19,7 +19,7 @@ usage: kodi-rpc [options] [method] [params [...]]
 
 Notes:
   - If connection-infos AND a config are omitted,
-    "./kodi-rpc.conf" or "~/.config/kodi-rpc.conf" will be used if it exists
+    "./kodi-rpc.conf" or "/home/tadly/.config/kodi-rpc.conf" will be used if it exists
 
   - For playerid you may use "active" as value.
     kodi-rpc Player.PlayPause playerid active
@@ -31,6 +31,7 @@ Examples:
   $ kodi-rpc Application.SetMute mute toggle
   $ kodi-rpc Application.SetVolume volume increment
   $ kodi-rpc Player.PlayPause playerid active
+  $ kodi-rpc Player.GetItem playerid active properties '["artist", "album", "title"]'
 ```
 
 ## Installation
