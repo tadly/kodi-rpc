@@ -231,6 +231,7 @@ function build_body() {
 
         ## append new key-value to params string
         if [[ "${val}" =~ ^[0-9]+$ ]] || \
+                [[ "${val}" =~ ^[0-9]+(\.[0-9]+)?$ ]] || \
                 [[ "${val}" == \[*\] ]] || \
                 [ "${val}" == "true" ] || \
                 [ "${val}" == "false" ]; then
